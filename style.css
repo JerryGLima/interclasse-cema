@@ -9,3 +9,10 @@
 .highlight-live{background:#edf7f0;border-color:#7eaf8d;border-top-color:#287844}.highlight-live .eyebrow,.highlight-live .highlight-clock{color:#226137}
 .highlight-empty{font-size:13px;line-height:1.7;color:var(--muted)}
 @media(max-width:700px){.highlight-card{padding:19px}.highlight-card h3{font-size:20px}.highlight-clock{font-size:14px}}
+
+.team-shirt{width:52px;height:52px;object-fit:contain;flex-shrink:0;border-radius:6px}
+.team{min-width:0}.team>span{overflow-wrap:anywhere}
+.highlight-card .highlight-teams{display:flex;align-items:center;gap:18px}
+.highlight-card .highlight-team{display:flex;align-items:center;gap:12px;color:var(--ink);min-width:0}
+.highlight-team .team-shirt{width:64px;height:64px}
+@media(max-width:700px){.team-shirt{width:42px;height:42px}.team{gap:6px}.match{gap:7px;padding-left:12px;padding-right:12px}.highlight-card .highlight-teams{gap:10px;font-size:16px}.highlight-card .highlight-team{flex:1;flex-direction:column;text-align:center;gap:8px}.highlight-team .team-shirt{width:60px;height:60px}}
