@@ -51,7 +51,7 @@ function renderStandings(){
  if(g.status!=='finished'||!Number.isInteger(g.homeScore)||!Number.isInteger(g.awayScore))return;
  a.j++;b.j++;a.gp+=g.homeScore;a.gc+=g.awayScore;b.gp+=g.awayScore;b.gc+=g.homeScore;
  if(g.homeScore===g.awayScore){a.e++;b.e++;a.p++;b.p++;}
- else{const winner=g.homeScore>g.awayScore?a:b,loser=winner===a?b:a;winner.v++;winner.p+=3;loser.d++;loser.p-=3;}
+ else{const winner=g.homeScore>g.awayScore?a:b,loser=winner===a?b:a;winner.v++;winner.p+=3;loser.d++;}
  });
  let position=0,previous=null;
  return '<div class="standings-wrap" tabindex="0" role="region" aria-label="Classificação '+cat+'"><table class="standings-table"><caption>'+cat+'</caption><thead><tr>'+['Pos.','Time','PTS','J','V','E','D','GP','GC','SG'].map(h=>'<th scope="col">'+h+'</th>').join('')+'</tr></thead><tbody>'+[...rows.values()].sort((a,b)=>b.p-a.p||a.name.localeCompare(b.name,'pt-BR')).map((r,i)=>{if(r.p!==previous)position=i+1;previous=r.p;return '<tr><td>'+position+'º</td><th scope="row"><span class="ranking-team">'+shirt(r.name)+esc(r.name)+'</span></th><td><strong>'+r.p+'</strong></td>'+[r.j,r.v,r.e,r.d,r.gp,r.gc,r.gp-r.gc].map(n=>'<td>'+n+'</td>').join('')+'</tr>';}).join('')+'</tbody></table></div>';
