@@ -1,3 +1,4 @@
+import {finalResult} from './champions.js';
 import {highlights,countdown} from './highlights.js';
 import {api,watchGames,watchAuth} from './firebase-service.js';
 const $=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -10,7 +11,7 @@ function dateLabel(date,options={day:'2-digit',month:'2-digit'}){return new Date
 function renderFilters(){const dates=[...new Set(games.map(g=>g.date))].sort();$('dates').innerHTML='<button data-day="all" class="'+(day==='all'?'active':'')+'" aria-pressed="'+(day==='all')+'">PROGRAMAÇÃO<b>Todos os dias</b></button>'+dates.map(d=>`<button data-day="${d}" class="${day===d?'active':''}" aria-pressed="${day===d}">${esc(dateLabel(d,{weekday:'short'}).toUpperCase())}<b>${dateLabel(d)}${d==='2026-11-19'?' • Finais':''}</b></button>`).join('');$('categories').innerHTML=['TODAS','FRALDINHA','MIRIM','INFANTIL','INFANTO'].map(c=>`<button data-category="${c}" class="${category===c?'active':''}" aria-pressed="${category===c}">${c==='TODAS'?'Todas as categorias':c.charAt(0)+c.slice(1).toLowerCase()}</button>`).join('');}
 function shirt(name){const color=['vinho','branco','azul','preto','rosa'].find(c=>name.toLowerCase().includes(c));return color?`<img class="team-shirt" src="assets/camisa-${color}.png" alt="" width="52" height="52" decoding="async">`:'<span class="dot" aria-hidden="true"></span>';}
 function team(name){return `<div class="team">${shirt(name)}<span>${esc(name)}</span></div>`;}
-function render(){renderStandings();renderHighlights();renderFilters();$('completed').textContent=games.filter(g=>g.status==='finished').length.toString().padStart(2,'0');$('live-count').textContent=games.filter(g=>g.status==='live').length.toString().padStart(2,'0');$('adminbar').hidden=!authenticated;$('admin').textContent=authenticated?'Painel ativo':'Área da organização';
+function render(){renderChampions();renderStandings();renderHighlights();renderFilters();$('completed').textContent=games.filter(g=>g.status==='finished').length.toString().padStart(2,'0');$('live-count').textContent=games.filter(g=>g.status==='live').length.toString().padStart(2,'0');$('adminbar').hidden=!authenticated;$('admin').textContent=authenticated?'Painel ativo':'Área da organização';
  const filtered=games.filter(g=>(day==='all'||g.date===day)&&(category==='TODAS'||g.category===category)&&(`${g.home} ${g.away}`.toLowerCase().includes(query))).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)||a.id-b.id);
  $('games').innerHTML=filtered.map(g=>`<article class="game"><div class="game-top"><strong>${esc(g.category)}${g.id>=25?' • FINAL':''}</strong><span class="badge ${g.status}">${labels[g.status]}</span></div><div class="match">${team(g.home)}<div class="score" aria-label="Placar ${g.homeScore??'não informado'} a ${g.awayScore??'não informado'}">${g.homeScore??'—'}<small>×</small>${g.awayScore??'—'}</div>${team(g.away)}</div>${g.homePens!==null?`<div class="note">Pênaltis: ${g.homePens} × ${g.awayPens}</div>`:''}${g.note?`<div class="note">${esc(g.note)}</div>`:''}<div class="game-bottom"><span>Jogo ${String(g.id).padStart(2,'0')} &nbsp;•&nbsp; ${dateLabel(g.date)} &nbsp;•&nbsp; ${esc(g.time)}</span>${authenticated?`<button data-edit="${g.id}">Editar jogo</button>`:'<span>Futsal</span>'}</div></article>`).join('')||'<p class="empty">Nenhum jogo encontrado para este filtro.</p>';
 }
@@ -55,5 +56,16 @@ function renderStandings(){
  });
  let position=0,previous=null;
  return '<div class="standings-wrap" tabindex="0" role="region" aria-label="Classificação '+cat+'"><table class="standings-table"><caption>'+cat+'</caption><thead><tr>'+['Pos.','Time','PTS','J','V','E','D','GP','GC','SG'].map(h=>'<th scope="col">'+h+'</th>').join('')+'</tr></thead><tbody>'+[...rows.values()].sort((a,b)=>b.p-a.p||a.name.localeCompare(b.name,'pt-BR')).map((r,i)=>{if(r.p!==previous)position=i+1;previous=r.p;return '<tr><td>'+position+'º</td><th scope="row"><span class="ranking-team">'+shirt(r.name)+esc(r.name)+'</span></th><td><strong>'+r.p+'</strong></td>'+[r.j,r.v,r.e,r.d,r.gp,r.gc,r.gp-r.gc].map(n=>'<td>'+n+'</td>').join('')+'</tr>';}).join('')+'</tbody></table></div>';
+ }).join('');
+}
+
+function renderChampions(){
+ const box=$('champions-cards');
+ if(!loaded){box.innerHTML='<p class="champion-pending">Aguardando conexão para confirmar os campeões…</p>';return;}
+ box.innerHTML=['FRALDINHA','MIRIM','INFANTIL','INFANTO'].map((cat,i)=>{
+ const g=games.find(g=>Number(g.id)===25+i),result=finalResult(g);
+ const heading='<div class="eyebrow wine">'+cat+'</div>';
+ if(!result)return '<article class="champion-card">'+heading+'<div class="champion-trophy" aria-hidden="true">🏆</div><h3>'+(!g?'Final a definir':g.status==='live'?'Final em andamento':g.status==='postponed'?'Final adiada':g.status==='finished'?'Aguardando decisão':'Quem vai levantar a taça?')+'</h3><p class="champion-pending">'+(g?.status==='finished'?'O campeão será exibido quando o placar ou os pênaltis confirmarem o vencedor.':g?esc(dateLabel(g.date))+' às '+esc(g.time)+' • Horário de Brasília':'Acompanhe a programação dos jogos.')+'</p><a href="#jogos">Acompanhar os jogos →</a></article>';
+ return '<article class="champion-card champion-confirmed">'+heading+'<div class="champion-trophy" aria-hidden="true">🏆</div><span class="champion-label">CAMPEÃO</span><h3 class="champion-team">'+shirt(result.champion)+esc(result.champion)+'</h3><div class="champion-runner"><span>VICE-CAMPEÃO</span><div>'+shirt(result.runnerUp)+'<strong>'+esc(result.runnerUp)+'</strong></div></div><p class="champion-result">Final: '+esc(g.home)+' <strong>'+g.homeScore+' × '+g.awayScore+'</strong> '+esc(g.away)+(result.penalties?'<br>Pênaltis: '+g.homePens+' × '+g.awayPens:'')+'</p></article>';
  }).join('');
 }
